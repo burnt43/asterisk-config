@@ -8,4 +8,5 @@ Gem::Specification.new so |s|
   s.homepage    = 'http://tmpurl.com'
   s.files       = ['lib/asterisk-config.rb']
   s.license     = 'MIT'
+  s.add_runtime_dependency 'activesupport'
 end
