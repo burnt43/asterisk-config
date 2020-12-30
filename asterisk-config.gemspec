@@ -1,4 +1,4 @@
-Gem::Specification.new so |s|
+Gem::Specification.new do |s|
   s.name        = 'asterisk-config'
   s.version     = '0.0.1'
   s.summary     = ''
