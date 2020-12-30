@@ -8,3 +8,10 @@ parser = AsteriskConfig::Parser.new(
 )
 hash = parser.parse
 puts hash['host-cm-mg2'].links(as: :array).to_s
+
+parser2 = AsteriskConfig::Parser.new(
+  '/etc/asterisk/ss7.conf',
+  'nb-mg0'
+)
+hash2 = parser2.parse
+puts hash2['host-nb-mg0'].links(as: :array).to_s

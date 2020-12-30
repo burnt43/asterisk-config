@@ -124,7 +124,7 @@ module AsteriskConfig
     def ssh_option_string
       options = []
 
-      if @ssh_options.key?(:kex_algorithm)
+      if @ssh_options[:kex_algorithm]
         options.push("-oKexAlgorithms=+#{@ssh_options[:kex_algorithm]}")
       end
 
