@@ -1,49 +1,51 @@
 module AsteriskConfig
-  class Category
-    attr_reader :full_name
+  module Category
+    class Base
+      attr_reader :full_name
 
-    def initialize(full_name)
-      @full_name = full_name
-      @attrs = {}
-    end
+      def initialize(full_name)
+        @full_name = full_name
+        @attrs = {}
+      end
 
-    # instance methods
+      # instance methods
 
-    # State Altering Methods
-    def add_attr(name, value)
-      @attrs[ActiveSupport::Inflector.underscore(name).to_sym] = value
-    end
+      # State Altering Methods
+      def add_attr(name, value)
+        @attrs[ActiveSupport::Inflector.underscore(name).to_sym] = value
+      end
 
-    # Meta-Programming Methods
+      # Meta-Programming Methods
 
-    INTEGER_RANGE_REGEX = /\A(\d+)\-(\d+)\z/
-    def method_missing(method_name, *args, &block)
-      if @attrs.key?(method_name)
-        result = @attrs[method_name]
+      INTEGER_RANGE_REGEX = /\A(\d+)\-(\d+)\z/
+      def method_missing(method_name, *args, &block)
+        if @attrs.key?(method_name)
+          result = @attrs[method_name]
 
-        if args[0] && args[0].key?(:as)
-          case args[0][:as]
-          when :range
-            if (match_data = INTEGER_RANGE_REGEX.match(result))
-              (match_data.captures[0].to_i..match_data.captures[1].to_i)
-            else
-              nil
+          if args[0] && args[0].key?(:as)
+            case args[0][:as]
+            when :range
+              if (match_data = INTEGER_RANGE_REGEX.match(result))
+                (match_data.captures[0].to_i..match_data.captures[1].to_i)
+              else
+                nil
+              end
+            when :int
+              result.to_i
+            when :array
+              result.split(',')
             end
-          when :int
-            result.to_i
-          when :array
-            result.split(',')
+          else
+            result
           end
         else
-          result
+          super
         end
-      else
-        super
       end
-    end
 
-    def respond_to_missing?(method_name, include_private = false)
-      @attrs.key?(method_name) || super
+      def respond_to_missing?(method_name, include_private = false)
+        @attrs.key?(method_name) || super
+      end
     end
   end
 
@@ -52,10 +54,16 @@ module AsteriskConfig
     CATEGORY_HEADER_REGEX = /\A\[([\w\-]+)\]\z/
     VALUE_REGEX = /\A([\w\-]+)\s?=>\s?(.*)\z/
 
-    def initialize(file_path, host='localhost', ssh_kex_algorithm: nil)
+    def initialize(
+      file_path,
+      host='localhost',
+      parse_as: AsteriskConfig::Category::Base,
+      ssh_kex_algorithm: nil
+    )
       @file_path = file_path
       @host = host
 
+      @parse_as = parse_as
       @ssh_options = {
         kex_algorithm: ssh_kex_algorithm
       }
@@ -80,7 +88,7 @@ module AsteriskConfig
             # NOOP
           elsif (match_data = CATEGORY_HEADER_REGEX.match(stripped_line))
             category_name = match_data.captures[0]
-            current_category = AsteriskConfig::Category.new(category_name)
+            current_category = @parse_as.new(category_name)
             state = :looking_for_values
           end
         when :looking_for_values
@@ -94,7 +102,7 @@ module AsteriskConfig
             result[current_category.full_name] = current_category
 
             category_name = match_data.captures[0]
-            current_category = AsteriskConfig::Category.new(category_name)
+            current_category = @parse_as.new(category_name)
             state = :looking_for_values
           end
         end
