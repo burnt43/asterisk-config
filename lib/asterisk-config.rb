@@ -57,13 +57,13 @@ module AsteriskConfig
     def initialize(
       file_path,
       host='localhost',
-      parse_as: AsteriskConfig::Category::Base,
+      parse_categories_as: AsteriskConfig::Category::Base,
       ssh_kex_algorithm: nil
     )
       @file_path = file_path
       @host = host
 
-      @parse_as = parse_as
+      @parse_categories_as = parse_categories_as
       @ssh_options = {
         kex_algorithm: ssh_kex_algorithm
       }
@@ -88,7 +88,7 @@ module AsteriskConfig
             # NOOP
           elsif (match_data = CATEGORY_HEADER_REGEX.match(stripped_line))
             category_name = match_data.captures[0]
-            current_category = @parse_as.new(category_name)
+            current_category = @parse_categories_as.new(category_name)
             state = :looking_for_values
           end
         when :looking_for_values
@@ -102,7 +102,7 @@ module AsteriskConfig
             result[current_category.full_name] = current_category
 
             category_name = match_data.captures[0]
-            current_category = @parse_as.new(category_name)
+            current_category = @parse_categories_as.new(category_name)
             state = :looking_for_values
           end
         end
