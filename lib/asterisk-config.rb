@@ -12,7 +12,23 @@ module AsteriskConfig
 
       # State Altering Methods
       def add_attr(name, value)
-        @attrs[ActiveSupport::Inflector.underscore(name).to_sym] = value
+        attr_name = ActiveSupport::Inflector.underscore(name).to_sym
+
+        if @attrs.key?(attr_name)
+          if @attrs[attr_name].is_a?(Array)
+            # An existing array value means just push the new value onto
+            # the array.
+            @attrs[attr_name].push(value)
+          else
+            # An existing, non-array value means we must convert the existing
+            # value into an array and then push the new value onto it.
+            existing_scalar_value = @attrs[attr_name]
+            @attrs[attr_name] = [existing_scalar_value, value]
+          end
+        else
+          # If no existing value, then just set the value.
+          @attrs[attr_name] = value
+        end
       end
 
       # Meta-Programming Methods
@@ -25,15 +41,39 @@ module AsteriskConfig
           if args[0] && args[0].key?(:as)
             case args[0][:as]
             when :range
-              if (match_data = INTEGER_RANGE_REGEX.match(result))
-                (match_data.captures[0].to_i..match_data.captures[1].to_i)
+              range_conversion = ->(input) {
+                if (match_data = INTEGER_RANGE_REGEX.match(input))
+                  (match_data.captures[0].to_i..match_data.captures[1].to_i)
+                else
+                  nil
+                end
+              }
+
+              if result.is_a?(Array)
+                result.map {|x| range_conversion.call(x)}
               else
-                nil
+                range_conversion.call(result)
               end
             when :int
-              result.to_i
+              int_conversion = ->(input) {
+                input.to_i
+              }
+
+              if result.is_a?(Array)
+                result.map {|x| int_conversion.call(x)}
+              else
+                int_conversion.call(result)
+              end
             when :array
-              result.split(',')
+              array_conversion = ->(input) {
+                input.split(',')
+              }
+
+              if result.is_a?(Array)
+                result.flat_map {|x| array_conversion.call(x)}
+              else
+                array_conversion.call(result)
+              end
             end
           else
             result

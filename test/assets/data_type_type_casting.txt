@@ -1,0 +1,10 @@
+[cat1]
+int_val => 10
+array_val => i0,i1,i2
+range_val => 25-48
+multi_int_val => 100
+multi_int_val => 200
+multi_array_val => 1,2,3
+multi_array_val => 4,5,6
+multi_range_val => 1-24
+multi_range_val => 25-48

@@ -1,0 +1,6 @@
+[cat1]
+attr1 => foo
+attr2 => bar
+attr2 => piyo
+attr2 => hige
+attr3 => qux
