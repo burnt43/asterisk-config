@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'asterisk-config'
-  s.version     = '0.0.4'
+  s.version     = '0.0.5'
   s.summary     = ''
   s.description = ''
   s.authors     = ['James Carson']

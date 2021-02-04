@@ -98,6 +98,8 @@ module AsteriskConfig
       file_path,
       host='localhost',
       parse_categories_as: AsteriskConfig::Category::Base,
+      ssh_user: nil,
+      ssh_identity_file: nil,
       ssh_kex_algorithm: nil
     )
       @file_path = file_path
@@ -105,6 +107,8 @@ module AsteriskConfig
 
       @parse_categories_as = parse_categories_as
       @ssh_options = {
+        user: ssh_user,
+        identity_file: ssh_identity_file,
         kex_algorithm: ssh_kex_algorithm
       }
     end
@@ -164,6 +168,10 @@ module AsteriskConfig
     def ssh_option_string
       options = []
 
+      if @ssh_options[:identity_file]
+        options.push("-i #{@ssh_options[:identity_file]}")
+      end
+
       if @ssh_options[:kex_algorithm]
         options.push("-oKexAlgorithms=+#{@ssh_options[:kex_algorithm]}")
       end
@@ -171,11 +179,19 @@ module AsteriskConfig
       options.join(' ')
     end
 
+    def ssh_destination
+      if @ssh_options[:user]
+        "#{@ssh_options[:user]}@#{@host}"
+      else
+        @host
+      end
+    end
+
     def raw_config
       if local?
         %x[cat #{@file_path}]
       else
-        %x[#{ssh_bin} #{ssh_option_string} #{@host} "[[ -e #{@file_path} ]] && cat #{@file_path}"]
+        %x[#{ssh_bin} #{ssh_option_string} #{ssh_destination} "[[ -e #{@file_path} ]] && cat #{@file_path}"]
       end
     end
 
