@@ -33,7 +33,7 @@ module AsteriskConfig
 
       # Meta-Programming Methods
 
-      INTEGER_RANGE_REGEX = /\A(\d+)\-(\d+)\z/
+      INTEGER_RANGE_REGEX = /\A(\d+)(\-(\d+))?\z/
       def method_missing(method_name, *args, &block)
         if @attrs.key?(method_name)
           result = @attrs[method_name]
@@ -43,7 +43,10 @@ module AsteriskConfig
             when :range
               range_conversion = ->(input) {
                 if (match_data = INTEGER_RANGE_REGEX.match(input))
-                  (match_data.captures[0].to_i..match_data.captures[1].to_i)
+                  start_range = match_data.captures[0].to_i
+                  end_range = match_data.captures[2].to_i || start_range
+
+                  (start_range..end_range)
                 else
                   nil
                 end
